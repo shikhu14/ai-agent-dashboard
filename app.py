@@ -1,37 +1,23 @@
 import streamlit as st
-import requests
-import os
-import openai
-from dotenv import load_dotenv
+from openai import OpenAI
 
-load_dotenv()  # Load your .env file if running locally
+# Create OpenAI client
+client = OpenAI()
 
-# Set OpenAI API key
-openai.api_key = os.getenv("OPENAI_API_KEY")
+st.title("AI Agent Dashboard")
 
-st.title("🧠 AI Agent Dashboard")
+# Text input from user
+user_input = st.text_input("Ask something to GPT-4:")
 
-industry = st.text_input("Enter Industry (e.g., Insurance)")
-company = st.text_input("Enter Company Name (e.g., HDFC Ergo)")
-
-if st.button("Get Insights") and industry and company:
-    prompt = f"""
-    You are a business analyst. For the company '{company}' in the '{industry}' industry, provide:
-    1. Top 5 competitors
-    2. Key products and services
-    3. Typical pricing models or dynamic pricing examples
-    4. 3 actionable business insights or strategies
-    """
-
-    with st.spinner("Thinking..."):
-        try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                temperature=0.7,
-                max_tokens=800
-            )
-            answer = response['choices'][0]['message']['content']
-            st.markdown(answer)
-        except Exception as e:
-            st.error(f"Error fetching insights: {e}")
+if user_input:
+    with st.spinner("Generating response..."):
+        response = client.chat.completions.create(
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": user_input}
+            ]
+        )
+        reply = response.choices[0].message.content
+        st.success("Response generated!")
+        st.write(reply)
