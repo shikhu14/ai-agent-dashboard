@@ -34,4 +34,4 @@ if st.button("Get Insights") and industry and company:
             answer = response['choices'][0]['message']['content']
             st.markdown(answer)
         except Exception as e:
-            st.error(f"Error fe
+            st.error(f"Error fetching insights: {e}")
