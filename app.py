@@ -1,57 +1,57 @@
 import streamlit as st
 import requests
+import json
 
-# Load OpenRouter API key from secrets
 API_KEY = st.secrets["OPENROUTER_API_KEY"]
 
-# Streamlit UI
-st.set_page_config(page_title="Competitor Insight Agent", page_icon="🔍")
-st.title("🔍 Competitor Insight Agent")
-st.write("Analyze the top 5 companies in an industry or a specific competitor.")
+st.set_page_config(page_title="AI Agent Dashboard", layout="centered")
+st.title("🤖 AI Agent Dashboard")
 
-industry = st.text_input("**Industry**", placeholder="e.g., Electric Vehicles, Fintech, Health Insurance")
-company = st.text_input("Optional: Specific Company", placeholder="e.g., Tesla, Policybazaar")
+model = st.selectbox(
+    "Select a model:",
+    [
+        "openai/gpt-3.5-turbo",
+        "openai/gpt-4",
+        "google/gemma-7b-it",
+        "meta-llama/llama-3-8b-instruct",
+        "mistralai/mistral-7b-instruct",
+    ],
+)
 
-if st.button("Analyze") and industry:
-    with st.spinner("Generating insights..."):
-        # Create prompt
-        if company:
-            prompt = (
-                f"Analyze the '{industry}' industry and provide insights for the company '{company}'. "
-                f"Include:\n"
-                f"- Top 5 companies in this industry\n"
-                f"- Key products, pricing models, and USPs for each\n"
-                f"- A comparison of '{company}' with others\n"
-                f"- Strategic suggestions for '{company}' to stay ahead."
-            )
-        else:
-            prompt = (
-                f"Identify the top 5 companies in the '{industry}' industry. "
-                f"For each, provide:\n"
-                f"- Products or services\n"
-                f"- Pricing or business model\n"
-                f"- Unique selling points\n"
-                f"Then suggest 3 strategic insights a new company can use to compete effectively."
-            )
+user_input = st.text_area("Ask something...", height=150)
 
-        # OpenRouter API request
-        try:
-            url = "https://openrouter.ai/api/v1/chat/completions"
-            headers = {
-                "Authorization": f"Bearer {API_KEY}",
-                "Content-Type": "application/json"
-            }
-            data = {
-                "model": "openai/gpt-3.5-turbo",
-                "messages": [{"role": "user", "content": prompt}],
-            }
+if st.button("Submit") and user_input:
+    payload = {
+        "model": model,
+        "messages": [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": user_input},
+        ],
+    }
 
-            response = requests.post(url, headers=headers, json=data)
-            response.raise_for_status()
-            result = response.json()["choices"][0]["message"]["content"]
-            st.markdown("### 🧠 Strategic Insights")
-            st.write(result)
+    headers = {
+        "Authorization": f"Bearer {API_KEY}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://ai-agent-dashboard.streamlit.app",  # change if different
+        "X-Title": "AI Agent Dashboard",
+    }
 
-        except Exception as e:
-            st.error("Something went wrong!")
-            st.exception(e)
+    try:
+        response = requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60,
+        )
+        response.raise_for_status()
+        data = response.json()
+        reply = data["choices"][0]["message"]["content"]
+        st.success("AI Response:")
+        st.write(reply)
+
+    except requests.exceptions.HTTPError as e:
+        st.error(f"HTTP error: {e}")
+        st.json(response.json())
+
+    except Exception as e:
+        st.error(f"Unexpected error: {e}")
