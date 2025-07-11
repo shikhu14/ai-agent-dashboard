@@ -37,7 +37,7 @@ if st.button("Analyze") and industry:
 
         try:
             response = client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-3.5-turbo",  # ✅ FIXED MODEL
                 messages=[{"role": "user", "content": prompt}]
             )
             result = response.choices[0].message.content
@@ -45,5 +45,5 @@ if st.button("Analyze") and industry:
             st.write(result)
 
         except Exception as e:
-            st.error("An error occurred while connecting to OpenAI.")
+            st.error("⚠️ An error occurred while connecting to OpenAI.")
             st.exception(e)
