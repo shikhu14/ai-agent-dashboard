@@ -1,30 +1,25 @@
 import streamlit as st
 from openai import OpenAI
 
-# API key from secrets
+# Initialize OpenAI client securely
 client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-# Page setup
-st.set_page_config(page_title="Insight Edge: Competitor Analyzer", layout="centered")
-st.title("📊 Insight Edge: Competitor Analyzer")
-st.markdown("Get competitive insights from the top 5 companies in any industry.")
+st.set_page_config(page_title="Competitor Insight Agent", layout="wide")
+st.title("🔍 Competitor Insight Agent")
 
-# Industry input
-industry = st.text_input("🔍 Enter an industry (e.g., HealthTech, FinTech, Electric Vehicles):")
+industry = st.text_input("Enter an industry to analyze (e.g., 'Electric Vehicles', 'Fintech', 'Health Insurance')")
 
-if st.button("Analyze Industry") and industry:
-    with st.spinner("Analyzing competitors..."):
-
-        # Prompt to GPT-4
+if industry:
+    with st.spinner("Researching competitors and creating insights..."):
         prompt = f"""
-        List the top 5 companies in the {industry} industry globally.
-        For each, provide:
-        - Company name
-        - Top 3 products/services
-        - Monetization/pricing strategy
-        - Unique strengths/differentiators
-        - One strategic insight for a startup trying to compete
-        Format clearly in markdown.
+        You are a market analyst AI. For the industry "{industry}", do the following:
+
+        1. Identify the top 5 companies globally or in a major region.
+        2. List their key products or services.
+        3. Compare pricing (if known), features, and target audience.
+        4. Provide strategic insights — such as gaps, opportunities, or emerging trends.
+        
+        Format the output as a markdown report with clear bullet points and subheadings.
         """
 
         response = client.chat.completions.create(
@@ -33,5 +28,4 @@ if st.button("Analyze Industry") and industry:
         )
 
         output = response.choices[0].message.content
-        st.markdown("### 🧠 Competitor Insights")
         st.markdown(output)
