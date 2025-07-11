@@ -1,8 +1,14 @@
 import streamlit as st
-from openai import OpenAI
+import requests
+import json
 
-# Load OpenAI API key securely
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+# Load OpenRouter API key from secrets
+API_KEY = st.secrets["OPENROUTER_API_KEY"]
+API_URL = "https://openrouter.ai/api/v1/chat/completions"
+HEADERS = {
+    "Authorization": f"Bearer {API_KEY}",
+    "Content-Type": "application/json"
+}
 
 # Streamlit UI
 st.set_page_config(page_title="Competitor Insight Agent", page_icon="🔍")
@@ -15,7 +21,7 @@ company_name = st.text_input("Optional: Specific Company", placeholder="e.g., Te
 
 if st.button("Analyze") and industry:
     with st.spinner("Fetching competitive insights..."):
-        # Construct prompt
+        # Prompt construction
         if company_name:
             prompt = (
                 f"Analyze the '{industry}' industry and provide insights for the company '{company_name}'. "
@@ -35,15 +41,24 @@ if st.button("Analyze") and industry:
                 f"Then suggest 3 strategic insights a new company can use to compete effectively."
             )
 
+        # Call OpenRouter API
+        payload = {
+            "model": "openai/gpt-3.5-turbo",  # or "openai/gpt-4" if you want GPT-4
+            "messages": [{"role": "user", "content": prompt}]
+        }
+
         try:
-            response = client.chat.completions.create(
-                model="gpt-3.5-turbo",  # ✅ FIXED MODEL
-                messages=[{"role": "user", "content": prompt}]
-            )
-            result = response.choices[0].message.content
-            st.markdown("### 🧠 Strategic Insights")
-            st.write(result)
+            response = requests.post(API_URL, headers=HEADERS, data=json.dumps(payload))
+            result = response.json()
+
+            if "choices" in result:
+                answer = result["choices"][0]["message"]["content"]
+                st.markdown("### 🧠 Strategic Insights")
+                st.write(answer)
+            else:
+                st.error("⚠️ No valid response. Please check your API usage or model.")
+                st.json(result)
 
         except Exception as e:
-            st.error("⚠️ An error occurred while connecting to OpenAI.")
+            st.error("An error occurred while connecting to OpenRouter.")
             st.exception(e)
