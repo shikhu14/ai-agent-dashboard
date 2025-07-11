@@ -1,23 +1,37 @@
 import streamlit as st
 from openai import OpenAI
 
-# Create OpenAI client
-client = OpenAI()
+# API key from secrets
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-st.title("AI Agent Dashboard")
+# Page setup
+st.set_page_config(page_title="Insight Edge: Competitor Analyzer", layout="centered")
+st.title("📊 Insight Edge: Competitor Analyzer")
+st.markdown("Get competitive insights from the top 5 companies in any industry.")
 
-# Text input from user
-user_input = st.text_input("Ask something to GPT-4:")
+# Industry input
+industry = st.text_input("🔍 Enter an industry (e.g., HealthTech, FinTech, Electric Vehicles):")
 
-if user_input:
-    with st.spinner("Generating response..."):
+if st.button("Analyze Industry") and industry:
+    with st.spinner("Analyzing competitors..."):
+
+        # Prompt to GPT-4
+        prompt = f"""
+        List the top 5 companies in the {industry} industry globally.
+        For each, provide:
+        - Company name
+        - Top 3 products/services
+        - Monetization/pricing strategy
+        - Unique strengths/differentiators
+        - One strategic insight for a startup trying to compete
+        Format clearly in markdown.
+        """
+
         response = client.chat.completions.create(
             model="gpt-4",
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": user_input}
-            ]
+            messages=[{"role": "user", "content": prompt}]
         )
-        reply = response.choices[0].message.content
-        st.success("Response generated!")
-        st.write(reply)
+
+        output = response.choices[0].message.content
+        st.markdown("### 🧠 Competitor Insights")
+        st.markdown(output)
